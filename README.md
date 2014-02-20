@@ -6,7 +6,8 @@ OSに依存せず、BIOSなどの力を借りて「普通の」パソコンで動作するプログラム集です。
 ※ある命題とその裏の真偽は必ずしも一致しません
 
 ## すぐに試せるFDイメージ
-(未稿)
+- [FizzBuzz](http://ux.getuploader.com/no_os_programs/download/1/fizzbuzz.img)
+- [素数判定](http://ux.getuploader.com/no_os_programs/download/2/primejudge.img)
 
 ## リンク集
 ### 実行に有用なエミュレータ(PC仮想化ソフトウェア)
