@@ -9,6 +9,7 @@ OSに依存せず、BIOSなどの力を借りて「普通の」パソコンで動作するプログラム集です。
 - [FizzBuzz](http://ux.getuploader.com/no_os_programs/download/1/fizzbuzz.img)
 - [素数判定](http://ux.getuploader.com/no_os_programs/download/2/primejudge.img)
 - [起動時のレジスタの値を表示](http://ux.getuploader.com/no_os_programs/download/3/print_regs.img)
+- [キー入力テスト](http://ux.getuploader.com/no_os_programs/download/4/getkey_test.img)
 
 ## リンク集
 ### 実行に有用なエミュレータ(PC仮想化ソフトウェア)
