@@ -30,13 +30,13 @@
 use strict;
 
 if(@ARGV!=2) {
-	die "Usage: generate_image_with_loader.pl <loader binary> <output image file>\n";
+	die "Usage: genimage_with_loader.pl <loader binary> <output image file>\n";
 }
 
 my $image_data;
 
 # boot loader
-open(IN,"< $ARGV[0]") or die("Loader binary open falied\n");
+open(IN,"< $ARGV[0]") or die("Loader binary open failed\n");
 binmode(IN);
 read(IN,$image_data,-s IN);
 close(IN);
