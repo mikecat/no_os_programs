@@ -307,9 +307,8 @@ readdisk:
 	push %bx
 	push %cx
 	push %dx
-	push %dx
 	mov %cx,%ax
-	mov %bx,%dx
+	xchg %bx,%dx
 	divw SectorsPerTrack
 	mov %dx,%cx
 	inc %cx
@@ -320,8 +319,7 @@ readdisk:
 	mov %al,%ch		# シリンダ番号(下位)
 	shl $6,%ah
 	or %ah,%cl		# シリンダ番号(上位)
-	pop %ax
-	mov %al,%dl		# %dlの値を復元
+	mov %bl,%dl		# %dlの値を復元
 	# ディスクを読み込む
 	mov $0x0201,%ax
 	mov %si,%bx
