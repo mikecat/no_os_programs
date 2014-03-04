@@ -107,7 +107,6 @@ _main:
 # input  %dl     ドライブ番号
 # output %bx:%ax ファイルサイズ  (見つからない場合未定義)
 # output %cx     先頭クラスタ番号(見つからない場合未定義)
-# output ZF      見つかったら0、見つからなかったら1
 	# ローカル変数
 	# %ax ルート情報の残り数
 	# %bh ファイル名比較用バッファ
@@ -143,16 +142,13 @@ searchfile_cmp_loop:
 	movw 0x1A(%si),%cx
 	movw 0x1C(%si),%ax
 	movw 0x1E(%si),%bx
-	test %bp,%bp	# set ZF=0
-	jmp searchfile_end
+	jmp _main_search_found	# 直接次の処理へ
 searchfile_cmp_loop_end:
 	add $0x20,%si
 	dec %ax
 	jnz searchfile_loop
-	# ZF=1
-searchfile_end:
+	# 見つからなかった
 
-	jnz _main_search_found
 	# TODO: not found表示
 	jmp error_exit
 _main_search_found:
