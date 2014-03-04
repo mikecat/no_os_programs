@@ -150,7 +150,7 @@ _main_no_new_cluster:
 	pop %ax
 	xor %bx,%bx
 	push %bx
-	mov $0x0500,%bx
+	mov $0x05,%bh
 	push %bx
 	retfw
 
@@ -181,7 +181,7 @@ cluster2sector:
 	push %si
 	movw MaxRootExtries,%ax
 	shl $5,%ax
-	add $0x1FF,%ax
+	add $0x1,%ah
 	shr $9,%ax	# ルート情報のセクタ数
 	mov %cx,%si
 	dec %si
@@ -258,8 +258,7 @@ searchfile:
 	push %bp
 	movw MaxRootExtries,%ax
 	call getrootdirpos
-	xor %bl,%bl
-	inc %bl
+	mov $1,%bl
 searchfile_loop:
 	dec %bl
 	jnz searchfile_no_load
