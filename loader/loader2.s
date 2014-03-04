@@ -305,8 +305,7 @@ readfat12:
 	push %cx
 	push %dx
 	push %si
-	push %di
-	mov %ax,%di		# %diは何番目の情報かを表す
+	mov %al,%dh		# %dhは何番目の情報かの下位8ビットを表す
 	shr $1,%ax		# %axは何番目の「3バイトの塊」かを表す
 	mov %ax,%bx
 	shl $1,%bx
@@ -331,7 +330,7 @@ readfat12:
 readfat12_no_read_disk:
 	add $FAT_CACHE_ADDR,%bx
 	# メモリ上のFATのデータを読み込む
-	test $1,%di
+	test $1,%dh
 	jz readfat12_even
 	# 奇数番目
 	movb 1(%bx),%al
@@ -348,7 +347,6 @@ readfat12_even:
 	movb 1(%bx),%ah
 	and $0x0F,%ah
 readfat12_end:
-	pop %di
 	pop %si
 	pop %dx
 	pop %cx
