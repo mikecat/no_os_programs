@@ -167,12 +167,6 @@ getrootdirpos_loop:
 	pop %ax
 	ret
 
-# input なし
-# output %cx FAT情報の位置を示すLBA
-getfatpos:
-	movw ReservedSectors,%cx
-	ret
-
 # input  %cx     クラスタ番号
 # output %bx:%cx そのクラスタのディスク上の先頭位置を示すLBA
 cluster2sector:
@@ -317,7 +311,7 @@ readfat12:
 	je readfat12_no_read_disk
 	# ディスクからFATのデータをロードする
 	movw %ax,fat_cache_number
-	call getfatpos
+	movw ReservedSectors,%cx	# %cxにFATの開始位置のセクタを入れる
 	add %ax,%cx		# %cxに「ディスク上で何番目のセクタか」が入る
 	push %bx		# スタックにメモリ上のオフセットが入る
 	xor %bx,%bx
