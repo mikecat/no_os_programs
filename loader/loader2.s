@@ -115,8 +115,8 @@ _main:
 	# %cx 今見ているルート情報のディスク上の位置(LBA)
 	# %si 今見ている情報のメモリ上の位置
 	# %bp ファイル名の比較位置
-	movw MaxRootExtries,%ax
 	call getrootdirpos
+	movw MaxRootExtries,%ax
 	mov $1,%bl
 searchfile_loop:
 	dec %bl
@@ -257,17 +257,16 @@ _main_no_new_cluster:
 	push %bx
 	retfw
 
+# breaks %ax
 # input  なし
 # output %cx ルートディレクトリ情報の位置を示すLBA
 getrootdirpos:
-	push %ax
 	movw ReservedSectors,%cx
 	movb TotalFATs,%al
 getrootdirpos_loop:
 	addw SectorsPerFAT,%cx
 	dec %al
 	jnz getrootdirpos_loop
-	pop %ax
 	ret
 
 # input  %cx     クラスタ番号
@@ -276,14 +275,14 @@ cluster2sector:
 	push %ax
 	push %dx
 	push %si
-	movw MaxRootExtries,%ax
-	shl $5,%ax
-	add $0x1,%ah
-	shr $9,%ax	# ルート情報のセクタ数
 	mov %cx,%si
 	dec %si
 	dec %si
 	call getrootdirpos
+	movw MaxRootExtries,%ax
+	shl $5,%ax
+	add $0x1,%ah
+	shr $9,%ax	# ルート情報のセクタ数
 	add %ax,%cx	# データ領域の先頭セクタ
 	xor %bh,%bh
 	movb SectorPerCluster,%bl
