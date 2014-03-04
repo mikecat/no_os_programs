@@ -274,26 +274,24 @@ getrootdirpos_loop:
 cluster2sector:
 	push %ax
 	push %dx
-	push %si
-	mov %cx,%si
-	dec %si
-	dec %si
+	mov %cx,%bx
+	dec %bx
+	dec %bx
 	call getrootdirpos
 	movw MaxRootExtries,%ax
 	shl $5,%ax
 	add $0x1,%ah
 	shr $9,%ax	# ルート情報のセクタ数
 	add %ax,%cx	# データ領域の先頭セクタ
+	mov %bx,%ax
 	xor %bh,%bh
 	movb SectorPerCluster,%bl
-	mov %si,%ax
 	mul %bx
 	mov %dx,%bx
 	add %ax,%cx
 	jnc cluster2sector_no_carry
 	inc %bx		# 繰り上がり
 cluster2sector_no_carry:
-	pop %si
 	pop %dx
 	pop %ax
 	ret
