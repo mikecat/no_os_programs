@@ -100,7 +100,58 @@ _main:
 	mov %ax,%ss
 	# ファイルの検索
 	mov $boot_file_name,%di
-	call searchfile
+
+# searchfile
+# breaks %si,%bp
+# input  %di     探すファイル名(11文字での表現)へのポインタ
+# input  %dl     ドライブ番号
+# output %bx:%ax ファイルサイズ  (見つからない場合未定義)
+# output %cx     先頭クラスタ番号(見つからない場合未定義)
+# output ZF      見つかったら0、見つからなかったら1
+	# ローカル変数
+	# %ax ルート情報の残り数
+	# %bh ファイル名比較用バッファ
+	# %bl メモリ上のルート情報の残り数
+	# %cx 今見ているルート情報のディスク上の位置(LBA)
+	# %si 今見ている情報のメモリ上の位置
+	# %bp ファイル名の比較位置
+	movw MaxRootExtries,%ax
+	call getrootdirpos
+	mov $1,%bl
+searchfile_loop:
+	dec %bl
+	jnz searchfile_no_load
+	# ルート情報を1セクタ読み込む
+	push %bx
+	xor %bx,%bx
+	mov $ROOT_CACHE_ADDR,%si
+	call readdisk
+	pop %bx
+	inc %cx
+	mov $0x10,%bl
+searchfile_no_load:
+	# ファイル名を比較する
+	xor %bp,%bp
+searchfile_cmp_loop:
+	movb (%bp,%si),%bh
+	cmpb (%bp,%di),%bh
+	jnz searchfile_cmp_loop_end
+	inc %bp
+	cmp $11,%bp
+	jb searchfile_cmp_loop
+	# 見つかった
+	movw 0x1A(%si),%cx
+	movw 0x1C(%si),%ax
+	movw 0x1E(%si),%bx
+	test %bp,%bp	# set ZF=0
+	jmp searchfile_end
+searchfile_cmp_loop_end:
+	add $0x20,%si
+	dec %ax
+	jnz searchfile_loop
+	# ZF=1
+searchfile_end:
+
 	jnz _main_search_found
 	# TODO: not found表示
 	jmp error_exit
@@ -233,63 +284,6 @@ readdisk:
 readdisk_error:
 	# TODO: メッセージ表示
 	jmp error_exit
-
-# input  %di     探すファイル名(11文字での表現)へのポインタ
-# input  %dl     ドライブ番号
-# output %bx:%ax ファイルサイズ  (見つからない場合未定義)
-# output %cx     先頭クラスタ番号(見つからない場合未定義)
-# output ZF      見つかったら0、見つからなかったら1
-searchfile:
-	# ローカル変数
-	# %ax ルート情報の残り数
-	# %bh ファイル名比較用バッファ
-	# %bl メモリ上のルート情報の残り数
-	# %cx 今見ているルート情報のディスク上の位置(LBA)
-	# %si 今見ている情報のメモリ上の位置
-	# %bp ファイル名の比較位置
-	push %si
-	push %dx
-	push %bp
-	movw MaxRootExtries,%ax
-	call getrootdirpos
-	mov $1,%bl
-searchfile_loop:
-	dec %bl
-	jnz searchfile_no_load
-	# ルート情報を1セクタ読み込む
-	push %bx
-	xor %bx,%bx
-	mov $ROOT_CACHE_ADDR,%si
-	call readdisk
-	pop %bx
-	inc %cx
-	mov $0x10,%bl
-searchfile_no_load:
-	# ファイル名を比較する
-	xor %bp,%bp
-searchfile_cmp_loop:
-	movb (%bp,%si),%bh
-	cmpb (%bp,%di),%bh
-	jnz searchfile_cmp_loop_end
-	inc %bp
-	cmp $11,%bp
-	jb searchfile_cmp_loop
-	# 見つかった
-	movw 0x1A(%si),%cx
-	movw 0x1C(%si),%ax
-	movw 0x1E(%si),%bx
-	test %bp,%bp	# set ZF=0
-	jmp searchfile_end
-searchfile_cmp_loop_end:
-	add $0x20,%si
-	dec %ax
-	jnz searchfile_loop
-	# ZF=1
-searchfile_end:
-	pop %bp
-	pop %dx
-	pop %si
-	ret
 
 # input  %ax  クラスタ番号
 # input  %dl  ドライブ番号
