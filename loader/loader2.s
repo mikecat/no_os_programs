@@ -189,7 +189,59 @@ _main_sector_no_carry:
 	dec %dh
 	jnz _main_no_new_cluster
 	# 次のクラスタに行く
-	call readfat12
+
+# readfat12
+# breaks %cx,%dh
+# input  %ax  クラスタ番号
+# input  %dl  ドライブ番号
+# output %ax  FATのクラスタ情報
+	push %bx
+	push %si
+	mov %al,%dh		# %dhは何番目の情報かの下位8ビットを表す
+	shr $1,%ax		# %axは何番目の「3バイトの塊」かを表す
+	mov %ax,%bx
+	shl $1,%bx
+	add %ax,%bx
+	mov %bx,%ax		# %axは「3バイトの塊」がFATの先頭から何バイト目から始まるかを表す
+	and $0x1,%bh	# %bxは%axを0x200で割ったあまり(メモリ上のオフセット)
+	shr $9,%ax		# %axは「FAT上で何番目のセクタか」を表す
+	cmp fat_cache_number,%ax
+	je readfat12_no_read_disk
+	# ディスクからFATのデータをロードする
+	movw %ax,fat_cache_number
+	movw ReservedSectors,%cx	# %cxにFATの開始位置のセクタを入れる
+	add %ax,%cx		# %cxに「ディスク上で何番目のセクタか」が入る
+	push %bx		# スタックにメモリ上のオフセットが入る
+	xor %bx,%bx
+	mov $FAT_CACHE_ADDR,%si
+	call readdisk
+	inc %cx
+	add $0x200,%si
+	call readdisk
+	pop %bx			# %bxにメモリ上のオフセットが入る
+readfat12_no_read_disk:
+	add $FAT_CACHE_ADDR,%bx
+	# メモリ上のFATのデータを読み込む
+	test $1,%dh
+	jz readfat12_even
+	# 奇数番目
+	movb 1(%bx),%al
+	shr $4,%al
+	movb 2(%bx),%ah
+	mov %ah,%bl
+	shl $4,%bl
+	or %bl,%al
+	shr $4,%ah
+	jmp readfat12_end
+readfat12_even:
+	# 偶数番目
+	movb (%bx),%al
+	movb 1(%bx),%ah
+	and $0x0F,%ah
+readfat12_end:
+	pop %si
+	pop %bx
+
 	movb SectorPerCluster,%dh
 	mov %ax,%cx
 	call cluster2sector
@@ -284,62 +336,6 @@ readdisk:
 readdisk_error:
 	# TODO: メッセージ表示
 	jmp error_exit
-
-# input  %ax  クラスタ番号
-# input  %dl  ドライブ番号
-# output %ax  FATのクラスタ情報
-readfat12:
-	push %bx
-	push %cx
-	push %dx
-	push %si
-	mov %al,%dh		# %dhは何番目の情報かの下位8ビットを表す
-	shr $1,%ax		# %axは何番目の「3バイトの塊」かを表す
-	mov %ax,%bx
-	shl $1,%bx
-	add %ax,%bx
-	mov %bx,%ax		# %axは「3バイトの塊」がFATの先頭から何バイト目から始まるかを表す
-	and $0x1,%bh	# %bxは%axを0x200で割ったあまり(メモリ上のオフセット)
-	shr $9,%ax		# %axは「FAT上で何番目のセクタか」を表す
-	cmp fat_cache_number,%ax
-	je readfat12_no_read_disk
-	# ディスクからFATのデータをロードする
-	movw %ax,fat_cache_number
-	movw ReservedSectors,%cx	# %cxにFATの開始位置のセクタを入れる
-	add %ax,%cx		# %cxに「ディスク上で何番目のセクタか」が入る
-	push %bx		# スタックにメモリ上のオフセットが入る
-	xor %bx,%bx
-	mov $FAT_CACHE_ADDR,%si
-	call readdisk
-	inc %cx
-	add $0x200,%si
-	call readdisk
-	pop %bx			# %bxにメモリ上のオフセットが入る
-readfat12_no_read_disk:
-	add $FAT_CACHE_ADDR,%bx
-	# メモリ上のFATのデータを読み込む
-	test $1,%dh
-	jz readfat12_even
-	# 奇数番目
-	movb 1(%bx),%al
-	shr $4,%al
-	movb 2(%bx),%ah
-	mov %ah,%bl
-	shl $4,%bl
-	or %bl,%al
-	shr $4,%ah
-	jmp readfat12_end
-readfat12_even:
-	# 偶数番目
-	movb (%bx),%al
-	movb 1(%bx),%ah
-	and $0x0F,%ah
-readfat12_end:
-	pop %si
-	pop %dx
-	pop %cx
-	pop %bx
-	ret
 
 error_exit:
 	# TODO: メッセージを表示してキー入力待機
