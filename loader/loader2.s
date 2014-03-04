@@ -131,8 +131,8 @@ _main_load_loop:
 	call readdisk
 	# セクタを進める
 	add $0x200,%si
-	add $1,%cx
-	jnc _main_sector_no_carry
+	inc %cx
+	jnz _main_sector_no_carry
 	inc %bx
 _main_sector_no_carry:
 	dec %dh
