@@ -17,6 +17,7 @@ OSに依存せず、BIOSなどの力を借りて「普通の」パソコンで動作するプログラム集です。
 - [Oracle VM VirtualBox](https://www.virtualbox.org/)
 - [QEMU](http://wiki.qemu.org/Main_Page)
 - [QEMU for Windows](http://homepage3.nifty.com/takeda-toshiya/qemu/)
+- [Virtual x86](http://copy.sh/v24/)
 - [8086run](https://bitbucket.org/7shi/8086run)
 
 ### 開発の参考になる情報
