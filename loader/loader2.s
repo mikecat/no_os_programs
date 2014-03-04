@@ -99,7 +99,7 @@ _main:
 	mov %ax,%es
 	mov %ax,%ss
 	# ファイルの検索
-	mov $boot_file_name,%si
+	mov $boot_file_name,%di
 	call searchfile
 	jnz _main_search_found
 	# TODO: not found表示
@@ -240,7 +240,7 @@ readdisk_error:
 	# TODO: メッセージ表示
 	jmp error_exit
 
-# input  %si     探すファイル名(11文字での表現)へのポインタ
+# input  %di     探すファイル名(11文字での表現)へのポインタ
 # input  %dl     ドライブ番号
 # output %bx:%ax ファイルサイズ  (見つからない場合未定義)
 # output %cx     先頭クラスタ番号(見つからない場合未定義)
@@ -251,9 +251,9 @@ searchfile:
 	# %bh ファイル名比較用バッファ
 	# %bl メモリ上のルート情報の残り数
 	# %cx 今見ているルート情報のディスク上の位置(LBA)
-	# %di 今見ている情報のメモリ上の位置
+	# %si 今見ている情報のメモリ上の位置
 	# %bp ファイル名の比較位置
-	push %di
+	push %si
 	push %dx
 	push %bp
 	movw MaxRootExtries,%ax
@@ -264,12 +264,9 @@ searchfile_loop:
 	jnz searchfile_no_load
 	# ルート情報を1セクタ読み込む
 	push %bx
-	push %si
 	xor %bx,%bx
 	mov $ROOT_CACHE_ADDR,%si
-	mov %si,%di
 	call readdisk
-	pop %si
 	pop %bx
 	inc %cx
 	mov $0x10,%bl
@@ -284,20 +281,20 @@ searchfile_cmp_loop:
 	cmp $11,%bp
 	jb searchfile_cmp_loop
 	# 見つかった
-	movw 0x1A(%di),%cx
-	movw 0x1C(%di),%ax
-	movw 0x1E(%di),%bx
+	movw 0x1A(%si),%cx
+	movw 0x1C(%si),%ax
+	movw 0x1E(%si),%bx
 	test %bp,%bp	# set ZF=0
 	jmp searchfile_end
 searchfile_cmp_loop_end:
-	add $0x20,%di
+	add $0x20,%si
 	dec %ax
 	jnz searchfile_loop
 	# ZF=1
 searchfile_end:
 	pop %bp
 	pop %dx
-	pop %di
+	pop %si
 	ret
 
 # input  %ax  クラスタ番号
@@ -311,11 +308,11 @@ readfat12:
 	push %di
 	mov %ax,%di		# %diは何番目の情報かを表す
 	shr $1,%ax		# %axは何番目の「3バイトの塊」かを表す
-	mov %ax,%si
-	shl $1,%si
-	add %ax,%si
-	mov %si,%ax		# %axは「3バイトの塊」がFATの先頭から何バイト目から始まるかを表す
-	and $0x1FF,%si	# %siは%axを0x200で割ったあまり(メモリ上のオフセット)
+	mov %ax,%bx
+	shl $1,%bx
+	add %ax,%bx
+	mov %bx,%ax		# %axは「3バイトの塊」がFATの先頭から何バイト目から始まるかを表す
+	and $0x1,%bh	# %bxは%axを0x200で割ったあまり(メモリ上のオフセット)
 	shr $9,%ax		# %axは「FAT上で何番目のセクタか」を表す
 	cmp fat_cache_number,%ax
 	je readfat12_no_read_disk
@@ -323,23 +320,23 @@ readfat12:
 	movw %ax,fat_cache_number
 	call getfatpos
 	add %ax,%cx		# %cxに「ディスク上で何番目のセクタか」が入る
-	push %si		# スタックにメモリ上のオフセットが入る
+	push %bx		# スタックにメモリ上のオフセットが入る
 	xor %bx,%bx
 	mov $FAT_CACHE_ADDR,%si
 	call readdisk
 	inc %cx
 	add $0x200,%si
 	call readdisk
-	pop %si			# %siにメモリ上のオフセットが入る
+	pop %bx			# %bxにメモリ上のオフセットが入る
 readfat12_no_read_disk:
-	add $FAT_CACHE_ADDR,%si
+	add $FAT_CACHE_ADDR,%bx
 	# メモリ上のFATのデータを読み込む
 	test $1,%di
 	jz readfat12_even
 	# 奇数番目
-	movb 1(%si),%al
+	movb 1(%bx),%al
 	shr $4,%al
-	movb 2(%si),%ah
+	movb 2(%bx),%ah
 	mov %ah,%bl
 	shl $4,%bl
 	or %bl,%al
@@ -347,8 +344,8 @@ readfat12_no_read_disk:
 	jmp readfat12_end
 readfat12_even:
 	# 偶数番目
-	movb (%si),%al
-	movb 1(%si),%ah
+	movb (%bx),%al
+	movb 1(%bx),%ah
 	and $0x0F,%ah
 readfat12_end:
 	pop %di
