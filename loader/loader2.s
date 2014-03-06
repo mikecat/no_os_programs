@@ -86,6 +86,8 @@ VolumeLabel:
 FileSystemType:
 	.ascii "FAT12   "
 
+.set HiddenSectorHigh,HiddenSector+2
+
 _main:
 	# 初期化
 	cli
@@ -293,11 +295,14 @@ cluster2sector_no_carry:
 # input  %dl     ドライブ番号
 # input  %si     出力先アドレス
 readdisk:
-	# LBAをint $0x13のパラメータに変換する
 	push %ax
 	push %bx
 	push %cx
 	push %dx
+	# LBAにHiddenSectorの値を足す
+	addw HiddenSector,%cx
+	adcw HiddenSectorHigh,%bx
+	# LBAをint $0x13のパラメータに変換する
 	mov %cx,%ax
 	xchg %bx,%dx
 	divw SectorsPerTrack
