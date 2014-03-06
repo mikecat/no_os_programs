@@ -86,9 +86,6 @@ VolumeLabel:
 FileSystemType:
 	.ascii "FAT12   "
 
-TXT_BOOTBIN:
-	.ascii "BOOT    BIN\0"
-
 _main:
 	# ‰Šú‰»
 	cli
