@@ -148,7 +148,8 @@ searchfile_cmp_loop_end:
 	jnz searchfile_loop
 	# 見つからなかった
 
-	# TODO: not found表示
+	mov $not_found,%si
+	call puts
 	jmp error_exit
 _main_search_found:
 	# サイズチェック(大きすぎるか、0バイトだったら弾く)
@@ -159,7 +160,8 @@ _main_search_found:
 	cmp $0x7000,%ax
 	jbe _main_size_ok	# 下位16ビットが0x7000以下ならセーフ
 _main_size_ng:
-	# TODO: invalid size表示
+	mov $invalid_size,%si
+	call puts
 	jmp error_exit
 _main_size_ok:
 	# ファイルの読み込み
@@ -327,15 +329,63 @@ readdisk:
 	pop %ax
 	ret
 readdisk_error:
-	# TODO: メッセージ表示
+	# エラーコードを作成
+	mov %ah,%dh
+	shr $4,%dh
+	shr $4,%dl
+	add $0x4141,%dx
+	# エラーメッセージを表示
+	mov $read_error,%si
+	call puts
+	# エラーコードを表示
+	mov %dh,%al
+	int $0x10
+	mov %dl,%al
+	int $0x10
 	jmp error_exit
 
 error_exit:
-	# TODO: メッセージを表示してキー入力待機
+	# キー入力待機
+error_exit_waitkey_loop:
+	# 文字があるかチェック
+	mov $0x01,%ah
+	int $0x16
+	# 文字読み出し
+	xor %ah,%ah
+	int $0x16
+	# 最初のチェックで「文字がない」だとZF=1になり、通過する
+	jnz error_exit_waitkey_loop
+	# ブート失敗を通知
 	int $0x18
+
+# breaks %ax,%bx
+# input  %si 出力するメッセージへのポインタ
+# output     なし
+# NILで終わるメッセージを出力する。(自動で改行はされない)
+puts:
+	mov $0x0E,%ah
+	xor %bx,%bx
+puts_loop:
+	movb (%si),%al
+	test %al,%al
+	jz puts_end
+	int $0x10
+	inc %si
+	jmp puts_loop
+puts_end:
+	ret
 
 boot_file_name:
 	.ascii "BOOT    BIN"
+
+not_found:
+	.string "404"
+
+invalid_size:
+	.string "413"
+
+read_error:
+	.string "500 "
 
 .align 2
 fat_cache_number:
