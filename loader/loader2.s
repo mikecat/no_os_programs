@@ -327,7 +327,7 @@ readdisk:
 readdisk_error:
 	# エラーコードを作成
 	mov %ah,%dh
-	shr $4,%dh
+	shr $4,%dx
 	shr $4,%dl
 	add $0x4141,%dx
 	# エラーメッセージを表示
