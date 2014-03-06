@@ -223,12 +223,8 @@ readfat12_no_read_disk:
 	jz readfat12_even
 	# Šï””Ô–Ú
 	movb 1(%bx),%al
-	shr $4,%al
 	movb 2(%bx),%ah
-	mov %ah,%bl
-	shl $4,%bl
-	or %bl,%al
-	shr $4,%ah
+	shr $4,%ax
 	jmp readfat12_end
 readfat12_even:
 	# ‹ô””Ô–Ú
