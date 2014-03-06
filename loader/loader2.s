@@ -341,6 +341,12 @@ readdisk_error:
 	jmp error_exit
 
 error_exit:
+	# 改行する
+	mov $0x0E0D,%ax
+	xor %bx,%bx
+	int $0x10
+	mov $0x0A,%al
+	int $0x10
 	# キー入力待機
 error_exit_waitkey_loop:
 	# 文字があるかチェック
