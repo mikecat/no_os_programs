@@ -69,12 +69,12 @@ test_fail:
 	call puts
 	mov (%bx),%dx
 	call dispnum
-hltloop:
 	mov $0x0E0D,%ax
 	xor %bx,%bx
 	int $0x10
 	mov $0x0A,%al
 	int $0x10
+hltloop:
 	hlt
 	jmp hltloop
 
